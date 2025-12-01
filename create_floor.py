@@ -1,8 +1,7 @@
 # create_floor.py
 
-
 def create_floor_from_nodes(sim, nodes, margin=1.0, transparency=0.6):
-    # --- Calcolo dimensioni ---
+    # --- Compute dimensions ---
     xs = [node.pos[0] for node in nodes.values()]
     ys = [node.pos[1] for node in nodes.values()]
 
@@ -13,12 +12,29 @@ def create_floor_from_nodes(sim, nodes, margin=1.0, transparency=0.6):
     floor_y = (y_max - y_min) + 2 * margin
     floor_z = 0.05
 
-    # Centro del floor
+    # Floor center
     cx = (x_min + x_max) / 2
     cy = (y_min + y_max) / 2
-    cz = -0.03  # leggermente sotto lo zero
+    cz = -0.03  # slightly below zero
 
-    # --- Creazione cuboid floor ---
+    # --- Create cuboid floor ---
+    floor = sim.createPureShape(
+        0,           # cuboid
+        0,           # options
+        [floor_x, floor_y, floor_z],
+        0            # static
+    )
+    sim.setObjectInt32Param(floor, sim.shapeintparam_respondable, 1)
+    sim.setObjectInt32Param(floor, sim.shapeintparam_static, 1)
+    sim.setObjectAlias(floor, "AUTO_FLOOR")
+    sim.setObjectPosition(floor, -1, [cx, cy, cz])
+
+    # Color and transparency
+    sim.setShapeColor(floor, None, sim.colorcomponent_ambient_diffuse, [0.8, 0.8, 0.8])
+    sim.setShapeColor(floor, None, sim.colorcomponent_transparency, [transparency])
+
+    return floor
+
     floor = sim.createPureShape(
         0,           # cuboid
         0,           # options
@@ -35,3 +51,4 @@ def create_floor_from_nodes(sim, nodes, margin=1.0, transparency=0.6):
     sim.setShapeColor(floor, None, sim.colorcomponent_transparency, [transparency])
 
     return floor
+
