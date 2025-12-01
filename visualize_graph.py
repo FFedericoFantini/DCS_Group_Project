@@ -5,7 +5,7 @@ import plotly.graph_objects as go
 # ------------------------------------------------------------
 # 1) CARICAMENTO WAYPOINTS
 # ------------------------------------------------------------
-wp = pd.read_csv("File_CSV/waypoints.csv")
+wp = pd.read_csv("../File_CSV/waypoints.csv")
 pos = {}
 for _, row in wp.iterrows():
     node_id = row["id"]
@@ -23,7 +23,7 @@ for _, row in wp.iterrows():
 # ------------------------------------------------------------
 # 2) CARICAMENTO GRAFO PESATO
 # ------------------------------------------------------------
-edges_df = pd.read_csv("File_CSV/graph.csv")
+edges_df = pd.read_csv("../File_CSV/graph.csv")
 
 G = nx.DiGraph()
 for node_id in pos.keys():
