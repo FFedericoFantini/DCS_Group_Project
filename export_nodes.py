@@ -4,7 +4,7 @@ import os
 
 
 # -------------------------------------------------------------
-# Crea i dummy per i waypoint
+# Create dummy objects for the waypoints
 # -------------------------------------------------------------
 def export_nodes_to_coppeliasim(sim, nodes):
     for node_id, node in nodes.items():
@@ -12,12 +12,10 @@ def export_nodes_to_coppeliasim(sim, nodes):
         sim.setObjectAlias(dummy, f"WP_{node_id}")
         sim.setObjectPosition(dummy, -1, node.pos)
 
-    print("✔ Dummy dei waypoint creati.")
-
 
 def save_waypoints_to_csv(nodes, filename):
     
-    # Crea cartella se non esiste
+    # Create folder if it doesn't exist
     os.makedirs(os.path.dirname(filename), exist_ok=True)
 
     with open(filename, "w", newline="") as f:
@@ -30,4 +28,4 @@ def save_waypoints_to_csv(nodes, filename):
 
     abs_path = os.path.abspath(filename)
 
-    print(f"📁 Waypoints salvati in {filename}")
+    print(f"📁 Waypoints saved in {filename}")
