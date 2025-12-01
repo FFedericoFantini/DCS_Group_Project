@@ -2,23 +2,26 @@
 
 import csv
 import math
+import json
+
+
 
 # ------------------------------------------------------------
-# DISTANZA 2D (XY) — Z IGNORATA
+# 2D DISTANCE (XY) — Z IGNORED
 # ------------------------------------------------------------
 def distance(p1, p2):
     return math.dist((p1[0], p1[1]), (p2[0], p2[1]))
 
 
 # ------------------------------------------------------------
-# COSTRUZIONE DEL GRAFO PESATO
+# WEIGHTED GRAPH CONSTRUCTION
 # ------------------------------------------------------------
 def build_graph(nodes):
 
     edges = []
 
     # --------------------------------------------------------
-    # Raggruppa nodi per A0, A1, A2...
+    # Group nodes by A0, A1, A2...
     # --------------------------------------------------------
     aisles = {}
     for node_id, node in nodes.items():
@@ -28,7 +31,7 @@ def build_graph(nodes):
 
     aisle_numbers = sorted([int(a[1:]) for a in aisles.keys()])
 
-    # ESTRAI MEETING E SHIPPING
+    # EXTRACT MEETING AND SHIPPING
     meeting = nodes["MEETING_AREA"]
     shipping = nodes["SHIPPING_AREA"]
 
@@ -46,7 +49,7 @@ def build_graph(nodes):
             front_meeting_nodes.append(fnode)
 
     # --------------------------------------------------------
-    # 2) Collegamenti Ai_F ↔ Ai+1_F (linea gialla)
+    # 2) Connections Ai_F ↔ A(i+1)_F (yellow line)
     # --------------------------------------------------------
     front_meeting_nodes.sort(key=lambda n: n.pos[1])
     for i in range(len(front_meeting_nodes)-1):
@@ -55,7 +58,6 @@ def build_graph(nodes):
         d = distance(a.pos, b.pos)
         edges.append((a.id, b.id, d))
         edges.append((b.id, a.id, d))
-
 
     # --------------------------------------------------------
     # 3) Ai_F ↔ Ai_C_X0
@@ -68,9 +70,8 @@ def build_graph(nodes):
             edges.append((fid, cid, d))
             edges.append((cid, fid, d))
 
-
     # --------------------------------------------------------
-    # 4) Collegamenti corsia Ai_C_Xj ↔ Ai_C_X(j+1) (linea blu)
+    # 4) Aisle connections Ai_C_Xj ↔ Ai_C_X(j+1) (blue line)
     # --------------------------------------------------------
     for a in aisle_numbers:
         corridor_nodes = [n for n in aisles[f"A{a}"] if "_C_X" in n.id]
@@ -83,9 +84,8 @@ def build_graph(nodes):
             edges.append((c1.id, c2.id, d))
             edges.append((c2.id, c1.id, d))
 
-
     # --------------------------------------------------------
-    # 5) Ai_C_Xj ↔ Ai_Xj_Lk (scaffali — stessa corsia)
+    # 5) Ai_C_Xj ↔ Ai_Xj_Lk (shelves — same aisle)
     # --------------------------------------------------------
     for node_id, node in nodes.items():
         if "_C_X" in node_id:
@@ -93,16 +93,15 @@ def build_graph(nodes):
             x_index = int(node_id.split("_X")[1])
             cnode = node
 
-            # tutti i livelli REALI
+            # all real shelf levels
             for sid, snode in nodes.items():
                 if sid.startswith(aisle) and f"_X{x_index}_L" in sid:
                     d = distance(cnode.pos, snode.pos)
                     edges.append((cnode.id, sid, d))
                     edges.append((sid, cnode.id, d))
 
-
     # --------------------------------------------------------
-    # 6) Collegamenti Ai_C_Xj ↔ A(i+1)_Xj_Lk (scaffali corsia successiva)
+    # 6) Ai_C_Xj ↔ A(i+1)_Xj_Lk (shelves in next aisle)
     # --------------------------------------------------------
     for a in aisle_numbers:
         next_a = a + 1
@@ -120,9 +119,8 @@ def build_graph(nodes):
                         edges.append((cid, sid, d))
                         edges.append((sid, cid, d))
 
-
     # --------------------------------------------------------
-    # 7) Ultimo nodo corsia Ai_C_X(max) ↔ Ai_FS
+    # 7) Last aisle node Ai_C_X(max) ↔ Ai_FS
     # --------------------------------------------------------
     for a in aisle_numbers:
         corridor_nodes = [n for n in aisles[f"A{a}"] if "_C_X" in n.id]
@@ -135,9 +133,8 @@ def build_graph(nodes):
             edges.append((last.id, fsid, d))
             edges.append((fsid, last.id, d))
 
-
     # --------------------------------------------------------
-    # 8) Collegamenti Ai_FS ↔ A(i+1)_FS (linea arancione)
+    # 8) Connections Ai_FS ↔ A(i+1)_FS (orange line)
     # --------------------------------------------------------
     front_ship_nodes = [nodes[f"A{a}_FS"] for a in aisle_numbers]
     front_ship_nodes.sort(key=lambda n: n.pos[1])
@@ -148,7 +145,6 @@ def build_graph(nodes):
         d = distance(a.pos, b.pos)
         edges.append((a.id, b.id, d))
         edges.append((b.id, a.id, d))
-
 
     # --------------------------------------------------------
     # 9) Ai_FS ↔ SHIPPING_AREA
@@ -164,13 +160,32 @@ def build_graph(nodes):
 
 
 # ------------------------------------------------------------
-# SALVATAGGIO CSV
+# CSV EXPORT
 # ------------------------------------------------------------
-def save_graph_to_csv(edges, filepath):
-    with open(filepath, "w", newline="") as f:
+def save_graph_to_csv(edges, filename):
+    with open(filename, "w", newline="") as f:
         w = csv.writer(f)
         w.writerow(["node_from", "node_to", "distance"])
         for e in edges:
             w.writerow(e)
 
-    print(f"Grafo salvato in {filepath}")
+    print(f"📁 Graph saved to {filename}")
+
+# ------------------------------------------------------------
+# ADIACENCY DICTONARY
+# ------------------------------------------------------------
+def edges_to_graph(edges):
+    graph = {}
+    for u, v, d in edges:
+        if u not in graph:
+            graph[u] = {}
+        graph[u][v] = d
+    return graph
+
+# ------------------------------------------------------------
+# SAVED DICTONARY
+# ------------------------------------------------------------
+def save_graph_json(graph, filename):
+    with open(filename, "w") as f:
+        json.dump(graph, f, indent=4)
+    print(f"📁 Graph saved to {filename}")
